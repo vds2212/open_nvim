@@ -100,8 +100,16 @@ def set_focus(module_basename):
         return
 
     hwnd = hwnds[0]
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    win32gui.SetForegroundWindow(hwnd)
+    try:
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
+
+    except Exception:
+        raise FocusException("Fail to focus on: %s" % str(hwnd))
+
+
+class FocusException(Exception):
+    pass
 
 
 if __name__ == "__main__":

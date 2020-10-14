@@ -2,13 +2,6 @@ import os
 import sys
 import neovim
 import set_focus
-# import win32event
-# import win32api
-# import winerror
-# import pywintypes
-# import base64
-# import sys
-# import os
 import time
 import datetime
 
@@ -30,68 +23,78 @@ def main():
     now = datetime.datetime.now()
     with open("nvim.log", mode="at") as g:
         log(g, "-" * 20)
-        log(g, "today: %s" % now.strftime("%Y/%m/%d %H:%M:%S"))
+        log(g, "Today: %s" % now.strftime("%Y/%m/%d %H:%M:%S"))
 
         si = SingleInstance()
         try:
             if si.is_running:
-                log(g, "Instance is running")
+                log(g, "Error: nvim.py is already running: abort")
                 return 2  # Retry later
 
             # time.sleep(2)
             servername_path = SERVERNAME_PATH
 
             if not os.path.isfile(servername_path):
-                log(g, "The %s is not found" % SERVERNAME_PATH)
-                server_path = start_vim(servername_path)
-                log(g, "Server: %s" % server_path)
-                return 0
-                return 1  # No vim found start vim.
+                log(g, "Server-Log: %s not found" % SERVERNAME_PATH)
+                log(g, "Start Neovim")
+                server_id = start_vim(servername_path)
+                if server_id is not None:
+                    log(g, "Success: Server ID: %s" % server_id)
+                    return 0
+                else:
+                    log(g, "Error: Fail to find the Server-Log")
+                    return 0
 
-            log(g, "The %s is found" % SERVERNAME_PATH)
+            log(g, "Server-Log: %s found" % SERVERNAME_PATH)
 
             with open(servername_path, mode="rt") as f:
                 line = f.readline()
-                servername = line.strip("\r\n ")
-                log(g, "servername: %s" % servername)
+                server_id = line.strip("\r\n ")
+                log(g, "Server-ID: %s" % server_id)
 
             try:
-                nvim = neovim.attach("socket", path=servername)
+                log(g, "Open connection")
+                nvim = neovim.attach("socket", path=server_id)
 
             except Exception:
-                log(g, "Neovim not found")
+                log(g, "Error: Neovim not found at: %s" % server_id)
                 os.remove(servername_path)
-                # start_vim(servername_path)
-                # return 0
-                return 1  # No vim found start vim.
+                return 0  # Fail
 
             if len(sys.argv) > 1:
                 path = sys.argv[1]
                 command = ':e %s' % path
-                log(g, "command: %s" % command)
+                log(g, "Command: %s" % command)
                 try:
                     nvim.command(command)
 
                 except Exception as e:
-                    log(g, "neovim command failed: %s" % str(e))
-
-                nvim.close()
-                log(g, "nvim close")
+                    log(g, "Error: Fail to run: %s" % str(e))
 
             else:
-                log(g, "no file to open")
+                log(g, "No file to open")
+
+            nvim.close()
+            log(g, "Close connection")
 
             set_focus.set_focus("nvim-qt.exe")
-            log(g, "set_focus")
+            log(g, "Set Focus")
+
+            log(g, "Success:")
 
         finally:
             si.clean_up()
-            log(g, "unlock")
+            # log(g, "Unlock")
 
         return 0
 
 
 def start_vim(servername_path):
+    """
+    Start neovim
+    Return the server id if found
+    Return None otherwise
+    """
     if len(sys.argv) > 1:
         os.system(r'start bin\nvim-qt.exe "%s"' % sys.argv[1])
     else:
@@ -102,14 +105,18 @@ def start_vim(servername_path):
     while True:
         if os.path.isfile(servername_path):
             with open(servername_path) as f:
-                server_path = f.readline()
-                server_path = server_path.rstrip("\r\n")
-                if server_path != "":
-                    return server_path
+                server_id = f.readline()
+                server_id = server_id.rstrip("\r\n")
+                if server_id != "":
+                    return server_id
         i += 0.5
         time.sleep(0.5)
-        if i >= 10:
-            return "fed up to wait"
+        if i < 10:
+            continue
+
+        break
+
+    return None
 
 
 def log(g, message):
@@ -175,6 +182,13 @@ if __name__ == "__main__":
             print(message)
             g.write(message + "\n")
         sys.exit(ret)
+
+    except set_focus.FocusException as e:
+        message = str(e)
+        with open("nvim.log", mode="at") as g:
+            print(message)
+            g.write(message + "\n")
+        sys.exit(0)
 
     except Exception as e:
         message = "Exception: %s, %s" % (str(type(e)), repr(e))
