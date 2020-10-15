@@ -93,9 +93,11 @@ def start_vim(servername_path):
     Return None otherwise
     """
     if len(sys.argv) > 1:
-        os.system(r'start "%s" "%s"' % (NEOVIM_PATH, sys.argv[1]))
+        # It seems that if the first argument is surrounded by quotes
+        # it fails to start.
+        os.system(r'start %s "%s"' % (NEOVIM_PATH, sys.argv[1]))
     else:
-        os.system(r'start "%s"' % NEOVIM_PATH)
+        os.system(r'start %s' % NEOVIM_PATH)
 
     # Wait that SERVERNAME_PATH is created before continuing
     i = 0
@@ -174,6 +176,7 @@ def main():
             if ret != 2:
                 break
 
+            break
             time.sleep(0.1)
 
         message = "Return %d" % ret
