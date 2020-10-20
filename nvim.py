@@ -56,7 +56,7 @@ def nvim():
         except Exception:
             log("Error: Neovim not found at: %s" % server_id)
             os.remove(servername_path)
-            return 0  # Fail
+            return 1  # Fail
 
         if len(sys.argv) > 1:
             path = sys.argv[1]
