@@ -24,10 +24,6 @@ if 'win32' in sys.platform.lower():
 
 
 def nvim():
-    now = datetime.datetime.now()
-    log("-" * 20)
-    log("Today: %s" % now.strftime("%Y/%m/%d %H:%M:%S"))
-
     si = SingleInstance()
     try:
         if si.is_running:
@@ -56,7 +52,9 @@ def nvim():
         except Exception:
             log("Error: Neovim not found at: %s" % server_id)
             os.remove(servername_path)
-            return 1  # Fail
+            server_id = start_vim(servername_path)
+            return 0
+            # return 1  # Fail
 
         if len(sys.argv) > 1:
             path = sys.argv[1]
@@ -169,6 +167,10 @@ class SingleInstance:
 
 
 def main():
+    start = datetime.datetime.now()
+    log("-" * 20)
+    log("Today: %s" % start.strftime("%Y/%m/%d %H:%M:%S"))
+
     try:
         print("nvim.py")
         while True:
@@ -184,16 +186,20 @@ def main():
 
     except set_focus.FocusException as e:
         message = str(e)
-        sys.exit(0)
+        # sys.exit(0)
 
     except Exception as e:
         message = "Exception: %s, %s" % (str(type(e)), repr(e))
         log(message)
-        sys.exit(0)
+        # sys.exit(0)
 
     finally:
         print("Finally")
-        pass
+
+        end = datetime.datetime.now()
+        log("End: %s" % end.strftime("%Y/%m/%d %H:%M:%S"))
+        duration = end - start
+        log("Duration: %0.2f" % duration.total_seconds())
 
 
 def log(message):
