@@ -101,7 +101,14 @@ def set_focus(module_basename):
 
     hwnd = hwnds[0]
     try:
-        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        # Avoid restore size when maximized
+        # TODO: Should add a test is the application is minimized
+        placement = win32gui.GetWindowPlacement(hwnd)
+        print(placement)
+        if placement[1] == win32con.SW_SHOWMINIMIZED:
+            print("minimized")
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+
         win32gui.SetForegroundWindow(hwnd)
 
     except Exception:

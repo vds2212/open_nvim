@@ -1,25 +1,33 @@
+import datetime
 import os
 import sys
-import neovim
-import set_focus
 import time
-import datetime
+
+import neovim
+
+import set_focus
 
 try:
     import fcntl
+
 except ImportError:
     fcntl = None
 
 
 NVIM_FOLDER = os.path.abspath(os.path.dirname(sys.argv[0]))
 LOCK_PATH = os.path.join(NVIM_FOLDER, "nvim.lock")
+
+# Make sure "%userprofile%/Local/nvim/ginit.vim" contains:
+#   silent execute "!echo " . v:servername . " > C:\\Softs\\Neovim\\nvim.txt"
+# Where NVIM_FOLDER is C:\Softs\Neovim
 SERVERNAME_PATH = os.path.join(NVIM_FOLDER, "nvim.txt")
+
 LOG_PATH = os.path.join(NVIM_FOLDER, "nvim.log")
 NEOVIM_PATH = r"bin\nvim-qt.exe"
 
 
 OS_WIN = False
-if 'win32' in sys.platform.lower():
+if "win32" in sys.platform.lower():
     OS_WIN = True
 
 
@@ -56,9 +64,10 @@ def nvim():
             return 0
             # return 1  # Fail
 
+
         if len(sys.argv) > 1:
             path = sys.argv[1]
-            command = ':e %s' % path
+            command = ":e %s" % path
             log("Command: %s" % command)
             try:
                 nvim.command(command)
@@ -95,7 +104,7 @@ def start_vim(servername_path):
         # it fails to start.
         os.system(r'start %s "%s"' % (NEOVIM_PATH, sys.argv[1]))
     else:
-        os.system(r'start %s' % NEOVIM_PATH)
+        os.system(r"start %s" % NEOVIM_PATH)
 
     # Wait that SERVERNAME_PATH is created before continuing
     i = 0
@@ -131,6 +140,9 @@ class SingleInstance:
         self.do_magic()
 
     def do_magic(self):
+        if fcntl is None:
+            return
+
         if OS_WIN:
             try:
                 if os.path.exists(LOCK_PATH):
@@ -143,7 +155,7 @@ class SingleInstance:
                     raise
         else:
             try:
-                self.fh = open(LOCK_PATH, 'w')
+                self.fh = open(LOCK_PATH, "w")
                 fcntl.lockf(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except EnvironmentError:
                 if self.fh:
