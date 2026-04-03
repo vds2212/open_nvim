@@ -13,17 +13,31 @@ try:
 except ImportError:
     fcntl = None
 
+NVIM_DATA = os.path.abspath(os.path.dirname(sys.argv[0]))
+OPEN_NVIM_FOLDER = NVIM_DATA
 
-NVIM_FOLDER = os.path.abspath(os.path.dirname(sys.argv[0]))
-LOCK_PATH = os.path.join(NVIM_FOLDER, "nvim.lock")
+if os.environ.get("LocalAppData"):
+    NVIM_DATA = os.environ.get("LocalAppData")
+    NVIM_DATA = os.path.join(NVIM_DATA, "nvim-data")
+    OPEN_NVIM_FOLDER = os.path.join(NVIM_DATA, "open_nvim")
+
+if os.environ.get("XDG_DATA_HOME"):
+    NVIM_DATA = os.environ.get("XDG_DATA_HOME")
+    NVIM_DATA = os.path.join(NVIM_DATA, "nvim-data")
+    OPEN_NVIM_FOLDER = os.path.join(NVIM_DATA, "open_nvim")
+
+if not os.path.isdir(OPEN_NVIM_FOLDER):
+    os.makedirs(OPEN_NVIM_FOLDER)
+
+LOCK_PATH = os.path.join(OPEN_NVIM_FOLDER, "open_nvim.lock")
 
 # Make sure "%userprofile%/Local/nvim/ginit.vim" contains:
 #   silent execute "!echo " . v:servername . " > C:\\Softs\\Neovim\\nvim.txt"
-# Where NVIM_FOLDER is C:\Softs\Neovim
-SERVERNAME_PATH = os.path.join(NVIM_FOLDER, "nvim.txt")
+# Where OPEN_NVIM_FOLDER is C:\Softs\Neovim
+SERVERNAME_PATH = os.path.join(OPEN_NVIM_FOLDER, "open_nvim.txt")
 
-LOG_PATH = os.path.join(NVIM_FOLDER, "nvim.log")
-NEOVIM_PATH = r"bin\nvim-qt.exe"
+LOG_PATH = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "open_nvim.log")
+NEOVIM_PATH = r"nvim-qt.exe"
 
 
 OS_WIN = False
@@ -63,7 +77,6 @@ def nvim():
             server_id = start_vim(servername_path)
             return 0
             # return 1  # Fail
-
 
         if len(sys.argv) > 1:
             path = sys.argv[1]
@@ -184,7 +197,7 @@ def main():
     log("Today: %s" % start.strftime("%Y/%m/%d %H:%M:%S"))
 
     try:
-        print("nvim.py")
+        print("open_nvim.py")
         while True:
             ret = nvim()
             if ret != 2:

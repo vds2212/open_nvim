@@ -1,5 +1,8 @@
 ReDim arrCmd(WScript.Arguments.Count + 1)
-arrCmd(0) = "cmd /c C:\Softs\Neovim\nvim.bat"
+Dim s
+s = WScript.ScriptFullName
+s = Mid(s, 1, Len(s) - 4)
+arrCmd(0) = "cmd /c """ & s & ".bat"""
 
 For i = 0 To WScript.Arguments.Count - 1
     Arg = WScript.Arguments(i)
